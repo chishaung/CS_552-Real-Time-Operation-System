@@ -13,6 +13,7 @@
 unsigned int counter = 0;
 int load;
 unsigned Temp;
+int control;
 
 void init_Ex1(void)
 {
@@ -22,6 +23,8 @@ void init_Ex1(void)
 	TCCR0 = (1<<CS02)|(1<<CS00);  // Timer clock = Sysclk/1024 (TCCR0 = 0x05)
 	TIFR  = 1<<TOV0;              // Clear TOV0, any pending interrupts
 	TIMSK = 1<<TOIE0;             // Enable Timer0 Overflow interrupt
+	counter = 0;
+	control = 0;
 
 } // END init_Ex1
 
@@ -32,7 +35,11 @@ void init_Ex1(void)
 ISR(TIMER0_OVF_vect)    // gcc syntax
 
 {	
-	counter++;
+	if (control == 1)
+		counter++;
+
+	if (control == 2)
+		counter--;
 		
 } // end ISR
 
@@ -43,26 +50,28 @@ int main (void) {
 	
 	init_Ex1();
 	sei();
-	counter = 0;
+	
 	
 	while(1) {
+
 		PORTB = 0xff;
-		
 		counter = 0;
-		counter2 = 0;
+		control = 0;
+		
 		while (PIND != 0xff) {
+			control = 1;
 			if (PIND != 0xff)
 			Temp = PIND;
-		}
-		counter2 = counter;
-		counter = 0;
-		
 
-		while (counter2 == counter) {
-		PORTB = Temp;
-	
+		}
+		
+		
+		if (control == 1) {
+			control = 2;
+			while (counter > 0) {
+				PORTB = Temp;
+			}		
 		}		
-					
 	}
 	
 
