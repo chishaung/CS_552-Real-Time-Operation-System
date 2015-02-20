@@ -5,76 +5,51 @@
 
 #include <inttypes.h>
 #include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <avr/pgmspace.h>
 
 
-unsigned int counter = 0;
-int load;
-unsigned Temp;
-int control;
 
-void init_Ex1(void)
-{
+void delay(unsigned int dly) {
 
-	DDRD = 0x00;				  // input
-	DDRB  = 0xFF;                 // Set Port B as output
-	TCCR0 = (1<<CS02)|(1<<CS00);  // Timer clock = Sysclk/1024 (TCCR0 = 0x05)
-	TIFR  = 1<<TOV0;              // Clear TOV0, any pending interrupts
-	TIMSK = 1<<TOIE0;             // Enable Timer0 Overflow interrupt
-	counter = 0;
-	control = 0;
-
-} // END init_Ex1
+    int i;
+    for (i = dly; i != 0; i--);
+	
+}
 
 
-// void interrupt [TIMER0_OVF_vect] ISR_TOV0 (void)   IAR syntax
-
-
-ISR(TIMER0_OVF_vect)    // gcc syntax
-
-{	
-	if (control == 1)
-		counter++;
-
-	if (control == 2)
-		counter--;
-		
-} // end ISR
 
 int main (void) {
-	
-	
-	unsigned int counter2;
-	
-	init_Ex1();
-	sei();
-	
-	
-	while(1) {
 
-		PORTB = 0xff;
-		counter = 0;
-		control = 0;
-		
-		while (PIND != 0xff) {
-			control = 1;
-			if (PIND != 0xff)
-			Temp = PIND;
+    uint8_t cnt;
+    DDRB = 0xff; // output
+    DDRD = 0x00; // input 
+    unsigned int time;
+    uint8_t i;
+    double timer = 0;
+    unsigned Temp;
 
-		}
-		
-		
-		if (control == 1) {
-			control = 2;
-			while (counter > 0) {
-				PORTB = Temp;
-			}		
-		}		
-	}
+    while(1) {
 	
+	PORTB = 0xff;
+
+	while (PIND != 0xff) {
+            timer++;
+	    if (PIND != 0xff)
+	    Temp = PIND;
+ 	}
+
+	delay(14000U);
+
+	while (timer > 0) {
+            PORTB = Temp;
+	    timer--;
+        }
+
+	PORTB = 0xff;
+	timer = 0;
+    }
+	 
 
 
-	return 0;
+return 0;
 }
