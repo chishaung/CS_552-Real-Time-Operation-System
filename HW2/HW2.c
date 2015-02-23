@@ -1,55 +1,71 @@
-// CS 552 Real Time Operation System
-// Chihsiang Wang 101-64106
-// Assignment 1
-
 
 #include <inttypes.h>
 #include <avr/io.h>
-#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 
 
 
-void delay(unsigned int dly) {
+unsigned int counter = 0;
+unsigned Temp;
+int control;
 
-    int i;
-    for (i = dly; i != 0; i--);
-	
-}
+void init_Ex1(void)
+  {
+
+   DDRD = 0x00; // input
+   DDRB = 0xFF; // Set Port B as output
+   TCCR0 = (1<<CS02)|(1<<CS00); // Timer clock = Sysclk/1024 (TCCR0 = 0x05)
+   TIFR = 1<<TOV0; // Clear TOV0, any pending interrupts
+   TIMSK = 1<<TOIE0; // Enable Timer0 Overflow interrupt
+   counter = 0;
+   control = 0;
+
+  } // END init_Ex1 
 
 
+// void interrupt [TIMER0_OVF_vect] ISR_TOV0 (void)   IAR syntax
 
-int main (void) {
 
-    uint8_t cnt;
-    DDRB = 0xff; // output
-    DDRD = 0x00; // input 
-    unsigned int time;
-    uint8_t i;
-    double timer = 0;
-    unsigned Temp;
+ ISR(TIMER0_OVF_vect)    // gcc syntax 
+
+  {
+   
+   if (control == 1)
+	counter++;
+   if (control == 2)
+	counter--; 
+
+  } // end ISR
+
+
+int main(void)
+{
+    init_Ex1();
+    sei();
+
 
     while(1) {
-	
-	PORTB = 0xff;
 
-	while (PIND != 0xff) {
-            timer++;
-	    if (PIND != 0xff)
-	    Temp = PIND;
- 	}
+        PORTB = 0xff;
+        counter = 0;
+        control = 0;
 
-	delay(14000U);
+        while (PIND != 0xff) {
+            control = 1;
+            if (PIND != 0xff)
+                Temp = PIND;
 
-	while (timer > 0) {
-            PORTB = Temp;
-	    timer--;
         }
 
-	PORTB = 0xff;
-	timer = 0;
+
+        if (control == 1) {
+            control = 2;
+            while (counter > 0) {
+                PORTB = Temp;
+            }
+        }
     }
-	 
+   
+    return(0);
 
-
-return 0;
-}
+}  // END main
