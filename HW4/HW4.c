@@ -1,99 +1,55 @@
 #include <avr/io.h>
+#include <util/delay.h>
+
+
+
+#define BIT(i) 	(1 << i)
+
+#define ROW_MASK	0b00111100		// mask PD[2..5]
+#define PORTD_MASK	0b11000000		// mask PD[6..7]
+#define PORTB_MASK	0b00000011		// mask PB[0..1]
+
+
+
 int main()
-{
-unsigned int i, dly;
+{	
+	uint8_t MASK;
+	uint8_t TEST;
+	DDRB = 0xFF;
+	PORTB = 0xFF;
+	// 1 2 3 4 5 6 7 8
+	// R R C R C C C R
 
-//high nibble for output(columns) low for input(rows);
-DDRA = 0x10001011;
-//DDRA = 0x01110100;
+	// 8 7 6 5 4 3 2 1
+	// R C C C R C R R
 
-//enable internal pullups for PB0-PB3
-PORTA= 0x0F;
+	DDRA =  0b10001011;
+	PORTA = 0b01110100;
+	while (1) {
+	    
+	    if (PINA == 0b00110100) {
+	        PORTB = 0x01;
+		_delay_ms(2);
+		PORTB = 0xFF;
+	    }
 
-//Port B for indication only
-DDRB=0xFF;
-//SFIOR = 0 << PUD;
-PORTB=0xff;
+	    if (PINA == 0b01010100) {
+	        PORTB = 0x02;
+		_delay_ms(2);
+		PORTB = 0xFF;
+	    }
 
-unsigned Mask = DDRA;
+	    if (PINA == 0b01100100) {
+	        PORTB = 0x03;
+		_delay_ms(2);
+		PORTB = 0xFF;
+	    }
 
-void delay (unsigned int dly)
-{
-for(i = dly; i != 0; i--) ;
-}
+	    if (PINA == 0b01110000) {
+	        PORTB = 0x04;
+		_delay_ms(2);
+		PORTB = 0xFF;
+	    }
 
-while (1) //loop key check forever
-	{
-
-
-		//first column
-		PORTA =0b10111111;
-		//check for rows and send key number to portD
-		//instead sending key number to PORTD you can use
-		// any function that serves pressed button
-		
-		// Not work
-		// 00000111
-		if (bit_is_set(PINA, 7)) {
-		PORTB=0x01;
-		delay(55000U);
-		PORTB = 0xff;
-		}
-		// 00000011
-		if (bit_is_set(PINA, 3)) {
-		PORTB=0x02;
-		delay(55000U);
-		PORTB = 0xff;
-		}
-		// Not work
-		if (bit_is_set(PINA, 2)) {
-		PORTB=0x03;
-		delay(65000U);
-		PORTB = 0xff;
-		}
-		// Not work
-		// 00000100
-		if (bit_is_set(PINA, 4)) {
-		PORTB=0x04;
-		delay(65000U);
-		PORTB = 0xff;
-		}
-/*
-
-		//second column
-		PORTA =0b11101111;
-		// D
-		if (!bit_is_set(PINA, 7)) PORTB=0x03;
-		// Not work
-		if (!bit_is_set(PINA, 3)) PORTB=0x04;
-		// C
-		if (!bit_is_set(PINA, 1)) PORTB=5;
-		// B
-		if (!bit_is_set(PINA, 0)) PORTB=6;
-
-
-		//third column
-		PORTA =0b00000000;
-		// #
-		if (!bit_is_set(PINA, 3)) PORTB=0x55;
-		// Not work
-		if (!bit_is_set(PINA, 2)) PORTB=0x55;
-		// 9 
-		if (!bit_is_set(PINA, 1)) PORTB=0x55;
-		// 6
-		if (!bit_is_set(PINA, 0)) PORTB=0x55;
-
-
-		//fourth column
-		PORTA =0b00000000;
-		// 0
-		if (!bit_is_set(PINA, 3)) PORTB=13;
-		// 8
-		if (!bit_is_set(PINA, 2)) PORTB=14;
-		// Not work
-		if (!bit_is_set(PINA, 1)) PORTB=15;
-		// 5
-		if (!bit_is_set(PINA, 0)) PORTB=16;
-*/
 	}
 }
