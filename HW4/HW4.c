@@ -2,7 +2,7 @@
  * Author: Chihsiang Wang
  * Description: If the user enter the right password, the LED will 'Dance' for you. If enter the wrong password, the LED will blink for warning.
  * Password: 83AC or 69BD or 120#
- * Code Size
+ * Code Size: 3.82KB
  */
 
 #include <avr/io.h>
