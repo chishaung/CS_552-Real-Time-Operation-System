@@ -3,10 +3,12 @@
  * Description: There are 4+1 tasks (1 for Idle task) will be execute in the RTOS
  * Code Size: 3.82KB
  */
-//#include <avr/io.h>
-//#include <util/delay.h>
+#include <avr/io.h>
+#include <util/delay.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 #include "HW7.h"
 #define F_CPU 16000000UL
 
@@ -16,6 +18,11 @@
 
 
 void UIKInitialize() {
+	SetupLED();
+	sei();
+	TCCR0 = (1<<CS02)|(1<<CS00);  // Timer clock = Sysclk/1024 (TCCR0 = 0x05)
+	TIFR  = 1<<TOV0;              // Clear TOV0, any pending interrupts
+	TIMSK = 1<<TOIE0;             // Enable Timer0 Overflow interrupt
 	Task_Numbers = 0;
 	ticklen = 1;
 
@@ -63,26 +70,28 @@ void UIKScheduler() {
 	UIKAddTask(Task_3, 1);
 	UIKAddTask(Task_4, 1);
 
+	// Execute Idle Task
 	TaskList[0]->status = 0;
-	//while (1) {
-		for (int i = 1; i < MAX_TASK; i++) {
-			UIKRun(i);
-		}
-		
-	//}
+	//UIKRun(0);
+	
+	while (1) {
+		UIKDispatcher();
+	}
+	
 }
 
 void UIKDelay() {
 
-	/*
-	// Delay One Second?
-	_delay_ms(1000);
-	*/
+
 
 }
 
-void UIKDispatcher(void) {
-
+void UIKDispatcher() {
+	for (int i = 0; i < MAX_TASK; i++) {
+		if (TaskList[i]->status == 0) {
+			UIKRun(i);
+		}
+	}
 }
 
 
@@ -105,7 +114,11 @@ void UIKIntDepth() {
 }
 
 void SetupLED() {
-	
+	DDRA = 0x00;
+	DDRB = 0xFF;                 // Set Port B as output
+
+	PORTB = 0xFF;
+
 }
 
 int main() {
@@ -118,8 +131,6 @@ int main() {
 
 	// Decide which task is running. If nothing running, execute IDLE task.
 	UIKScheduler();
-
-
 
 
 
