@@ -3,7 +3,7 @@
 #define MAX_TASK 5
 #include <avr/io.h>
 #include <util/delay.h>
-
+#include <avr/interrupt.h>
 
 typedef struct Task_Control {
 
@@ -18,6 +18,7 @@ typedef struct Task_Control * TCBptr;
 
 int ticklen;
 int Task_Numbers;
+int Current_Task;
 TCBptr TaskList[MAX_TASK];
 
 
@@ -72,30 +73,36 @@ void Task_4() {
 
 void UIKIdle() {
 	while (1) {
+
 		PORTB = 0xFE;
 		_delay_ms(300);
 		PORTB = 0xFF;
 		_delay_ms(500);
-		if (TaskList[0]->status = 1)
-			break;
+
 	}
 }
+
+
 
 ISR(TIMER0_OVF_vect)    // gcc syntax
 
 {
 	//UIKDispatcher();
+	
 	while (PINA != 0xFF) {
-		TaskList[0]->status = 1;
+
 		TaskList[1]->status = 0;
-		UIKDispatcher();
+
 	}
 	
+	
 	while (PINA == 0xFF) {
-		TaskList[0]->status = 0;
+
 		TaskList[1]->status = 1;
-		UIKDispatcher();
-	}			
+
+	
+	}
+				
 } // end ISR
 
 #endif
