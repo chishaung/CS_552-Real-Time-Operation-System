@@ -14,17 +14,32 @@
 
 
 
-
-
+/*
+ISR(INT0_vect) {
+	while(1) {
+		PORTB = 0x55;
+		_delay_ms(300);
+		PORTB = 0xFF;
+		_delay_ms(300);
+	}
+}
+*/
 
 void UIKInitialize() {
+	
+	cli();
 	SetupLED();
-	sei();
 	TCCR0 = (1<<CS02)|(1<<CS00);  // Timer clock = Sysclk/1024 (TCCR0 = 0x05)
 	TIFR  = 1<<TOV0;              // Clear TOV0, any pending interrupts
 	TIMSK = 1<<TOIE0;             // Enable Timer0 Overflow interrupt
+	//SREG = 1 << 7;        
+	
+	GICR = (1<<INT0);
+	MCUCR = (1<<ISC01) | (1<<ISC00);
+	
 	Task_Numbers = 0;
 	ticklen = 1;
+	sei();			      // Enable global interrupt
 
 }
 
@@ -49,8 +64,8 @@ void UIKAddTask (void (* task)(void), int Task_Priority) {
 }
 
 void createTaskList(TCBptr *TaskList) {
-	int i = 0;
-	for (int i = 0; i < MAX_TASK; i++) {
+	int i;
+	for (i = 0; i < MAX_TASK; i++) {
 		TaskList[i] = (Task_Control*)malloc(sizeof(Task_Control));
 	}
 
@@ -59,6 +74,7 @@ void createTaskList(TCBptr *TaskList) {
 void UIKRun(int taskid) {
 
 	(TaskList[taskid] -> taskptr) ();
+	Current_Task = taskid;
 	
 }
 
@@ -66,17 +82,16 @@ void UIKScheduler() {
 
 	UIKAddTask(UIKIdle, 10);
 	UIKAddTask(Task_1, 1);
-	UIKAddTask(Task_2, 1);
-	UIKAddTask(Task_3, 1);
-	UIKAddTask(Task_4, 1);
+	UIKAddTask(Task_2, 2);
+	UIKAddTask(Task_3, 3);
+	UIKAddTask(Task_4, 4);
 
 	// Execute Idle Task
-	TaskList[0]->status = 0;
-	//UIKRun(0);
+	TaskList[0]->status = 0; // Idle task will never be blocked
+	Current_Task = 0;	 // Running Idle task
+
+	UIKDispatcher();
 	
-	while (1) {
-		UIKDispatcher();
-	}
 	
 }
 
@@ -87,8 +102,10 @@ void UIKDelay() {
 }
 
 void UIKDispatcher() {
-	for (int i = 0; i < MAX_TASK; i++) {
-		if (TaskList[i]->status == 0) {
+	int i;
+	for (i = 0; i < MAX_TASK; i++) {
+		// check which task is ready, and execute highest priority task
+		if (TaskList[i]->status == 0 && TaskList[i]->Priority <= TaskList[Current_Task]->Priority) {
 			UIKRun(i);
 		}
 	}
