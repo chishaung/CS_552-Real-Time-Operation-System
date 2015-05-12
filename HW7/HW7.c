@@ -1,6 +1,12 @@
 /* RTOS Assignment 7 - UIKAPI
+ * RTOS Assignment 8 - Semaphore Control
  * Author: Chihsiang Wang
- * Description: There are 4+1 tasks (1 for Idle task) will be execute in the RTOS
+ * Description: 
+ * This code is the implememnt of the Assignment 7 & 8. 
+ * It implement the UIKAPI, which using Stk500 switches to control the tasks.
+ * For the Assignment 8, I added Semaphore Control Function, this implement by Stk500 Switches. 
+ * SW0 ~ SW3: Set task 1~4 to be ready
+ * SW4 ~ SW7: Set task 1~4 to be Hold
  * Code Size: 3.82KB
  */
 #include <avr/io.h>
@@ -150,6 +156,7 @@ void UIKInitialize() {
     SetupLED();
     //Init_timer0();
     Init_timer1();
+    //UIKTickHandler();
     Task_Numbers = 0;
 
 }
@@ -164,7 +171,10 @@ void UIKAddTask (void (* task)(void), int Task_Priority) {
 		TaskList[Loc]->Task_ID = Loc;
 		TaskList[Loc]->status = 1;	// 0 for ready, 1 for blocking
 		TaskList[Loc]->Priority = Task_Priority;
+		TaskList[Loc]->Sem = UIKSemCreate();
+		//TaskList[Loc]->Init = 0;
 		Task_Numbers++;
+		
 	}
 
 	else {
@@ -213,7 +223,7 @@ int UIKDispatcher() {
     best = 0;
     for (i = 0; i < Task_Numbers; i++) {
 	// check which task is ready, and execute highest priority task
-	if (TaskList[i]->status == 0 && TaskList[i]->Priority <= TaskList[best]->Priority) {
+	if (TaskList[i]->Sem->value == 0 && TaskList[i]->Priority <= TaskList[best]->Priority) {
 	    best = i;
 	}
     }
@@ -224,15 +234,29 @@ int UIKDispatcher() {
 
 
 void UIKTickHandler() {
-
+    Init_timer1();
 }
 
-void UIKTickNum() {
-
+int UIKTickNum() {
+    return ticknum;
 }
 
-void UIKDelay() {
 
+UIKSem* UIKSemCreate() {
+    UIKSem* Sem;
+    Sem = (UIKSem*)malloc(sizeof(UIKSem));
+    Sem->value = 0;
+    return Sem;
+}
+
+// Wait
+void UIKSemPend(UIKSem* Sem) {
+    Sem->value = 1;
+}
+
+// Signal
+void SemPost(UIKSem* Sem) {
+    Sem->value = 0;
 }
 
 void SetupLED() {
@@ -270,7 +294,8 @@ int main() {
 	// enable global interrupt from here
 	sei();
 
-	while(1);
+	// Start Rtos
+	//while(1);
 	
 
 }
