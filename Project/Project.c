@@ -10,10 +10,10 @@
  * this can help to perfome the result better. 
 
  * Task Description:
- * Task 1: LED0 and LED1 will blink.	Priority: 1
- * Task 2: LED2 and LED3 will blink.	Priority: 2
- * Task 3: LEDs move from 0 to 7.		Priority: 3
- * Task 4: LED blink as 0x55.			Priority: 4
+ * Task 1: LED0 	Priority: 1
+ * Task 2: LED1 	Priority: 2
+ * Task 3: LED2 	Priority: 3
+ * Task 4: LED3		Priority: 4
 
  * Algorithm:
  * Giving each TCB a int variable names 'Age', initialize it to be 0 when add task to scheduling.
@@ -23,6 +23,7 @@
  * next tick, Task 2 will be execute: Task2~4 are same age:1, but task 2 has better priority.
  * Except currect task, others + 1 age -> T1:1, T2:1, T3:2, T4:2
  * Keep doing this, and we can see the age will change like:
+ [T1:0] [T2:0] [T3:0] [T4:0]
  [T1:0] [T2:1] [T3:1] [T4:1]
  [T1:1] [T2:1] [T3:2] [T4:2]
  [T1:2] [T2:2] [T3:2] [T4:3]
@@ -50,19 +51,19 @@ ISR(TIMER1_COMPA_vect) {
 
 		// Get Next task ID -> call Dispatcher
 		Going_to_task = UIKDispatcher();
-
+		//PORTB = 0xFF;
 		// Execute that task, if same as current one, do nothing
 		if (Going_to_task != Current_Task) {
 			UIKRun(Going_to_task);
 		}
 
 		// Re-enable interrupt
-		sei();
+		// sei();
 
 	}
 	
 	ms ++;
-	if (ms >= 5000)
+	if (ms >= 500000)
 		ms = 0;
 }
 
@@ -72,26 +73,33 @@ int UIKDispatcher() {
 
 	int i, best, oldest;
 
-	best = 1;
+	best = 0;
 	oldest = 0;
-	
+
+	// Find oldest age in the TaskList	
 	for (i = 1; i < Task_Numbers; i++) {
-		if (TaskList[i]->Age >= oldest) {
+		if (TaskList[i]->Age >= oldest) { 
 			oldest = TaskList[i]->Age;
 		}
 	}
 	
+	
+	
+	// Decide which Task will be executed next at this tick
 	for (i = 1; i < Task_Numbers; i++) {
-		// check which task is ready, and execute highest priority task
-		if (TaskList[i]->status == 0 &&  TaskList[i]->Age == oldest && TaskList[i]->Priority <= TaskList[best]->Priority) {
+		
+		if (TaskList[i]->Age == oldest && TaskList[i]->Priority <= TaskList[best]->Priority) {
 			best = i;
 		}
 	}
-	
-	for (i = 0; i < Task_Numbers; i++) {
+
+
+	for (i = 1; i < Task_Numbers; i++) {
 		if (i != best)
 		TaskList[i]->Age = TaskList[i]->Age+1;
 	}
+	
+
 
 	return best;
 }
