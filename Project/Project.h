@@ -36,9 +36,9 @@ void Task_1() {
 	while (1) {
 
 		PORTB = ~0x01;
-		_delay_ms(300);
-		PORTB = ~0x02;
-		_delay_ms(300);
+		_delay_ms(100);
+		PORTB = ~0x00;
+		_delay_ms(100);
 		sei();
 	}
 }
@@ -46,22 +46,29 @@ void Task_1() {
 void Task_2() {
 	while (1) {
 
-		PORTB = ~0x04;
-		_delay_ms(300);
-		PORTB = ~0x08;
-		_delay_ms(300);
+		PORTB = ~0x02;
+		_delay_ms(100);
+		PORTB = ~0x00;
+		_delay_ms(100);
 		sei();
 	}
 }
 
 void Task_3() {
+	/*
 	uint8_t cnt;
 	while (1) {
 
 		if (PORTB == 0x00)
 		PORTB = 0xff;
 		PORTB = PORTB << 1;
-		_delay_ms(300);
+		_delay_ms(100);
+		sei();
+	}*/	while (1) {
+		PORTB = ~0x04;
+		_delay_ms(100);
+		PORTB = ~0x00;
+		_delay_ms(100);
 		sei();
 	}
 }
@@ -69,10 +76,10 @@ void Task_3() {
 void Task_4() {
 	while (1) {
 		
-		PORTB = 0x0F;
-		_delay_ms(300);
-		PORTB = 0xFF;
-		_delay_ms(300);
+		PORTB = ~0x08;
+		_delay_ms(100);
+		PORTB = ~0x00;
+		_delay_ms(100);
 		sei();
 	}
 }
@@ -111,8 +118,10 @@ void createTaskList(TCBptr *TaskList) {
 
 void UIKRun(int taskid) {
 	Current_Task = taskid;
-	//currTCB = TaskList[Current_Task]->stack_ptr;
-	//restorecontext();
+	int i;
+
+
+ 
 	(TaskList[taskid] -> taskptr) ();
 }
 
@@ -138,7 +147,7 @@ void UIKAddTask (void (* task)(void), int Task_Priority) {
 	if (Task_Numbers < MAX_TASK) {
 		TaskList[Loc]->taskptr = task;
 		TaskList[Loc]->Task_ID = Loc;
-		TaskList[Loc]->status = 1;	// 0 for ready, 1 for blocking
+		TaskList[Loc]->status = 0;	// 0 for ready, 1 for blocking
 		TaskList[Loc]->Priority = Task_Priority;
 		TaskList[Loc]->Age = 0;
 		Task_Numbers++;
